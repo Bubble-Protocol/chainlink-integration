@@ -1,4 +1,4 @@
-const { sha256 } = await import('npm:@noble/hashes/sha2');
+const { keccak_256 } = await import('npm:@noble/hashes/sha3');
 const secp = await import('npm:@noble/secp256k1');
 
 class BubbleRPCManager {
@@ -14,27 +14,32 @@ class BubbleRPCManager {
     return this._send(contentId.provider, responseType, await this._constructRequest(contentId, 'read', {}, options));
   }
 
+  async list(contentId, responseType='json', options) {
+    return this._send(contentId.provider, responseType, await this._constructRequest(contentId, 'list', {}, options));
+  }
+
   async _constructRequest(contentId, method, params={}, options) {
     const request = {
-      jsonrpc: "2.0",
-      id: this.nextId++,
       method: method,
       params: {
           timestamp: Date.now(),
           nonce: crypto.randomUUID(),
           chainId: contentId.chain,
-          contract: contentId.contract,
-          file: contentId.file,
+          contract: contentId.contract.toLowerCase(),
+          file: contentId.file.toLowerCase(),
           ...params,
           options
       }
     }
-    return this._sign(request);
+    const signedRequest = await this._sign(request);
+    signedRequest.jsonrpc = "2.0";
+    signedRequest.id = this.nextId++;
+    return signedRequest;
   }
 
   async _sign(request) {
     if (request.options === undefined) delete request.options;
-    const hash = sha256(JSON.stringify(request));
+    const hash = keccak_256(JSON.stringify(request));
     const sig = await secp.signAsync(hash, this.privateKey);
     request.params.signature = sig.toCompactHex() + secp.etc.bytesToHex([27+sig.recovery]);
     return request;
@@ -67,16 +72,30 @@ class BubbleRPCManager {
 // Main
 //
 
-const privateKey = args[0];
+if (!secrets.key) throw Error("Private Key not set in secrets");
 
-const contentId = {
+const privateKey = secrets.key;
+const ballotContract = args[0];
+const bubbleManager = new BubbleRPCManager(privateKey);
+
+const bubbleId = {
     chain: 137,
-    contract: "0x27b9F83D7B18b56f3Cb599Af90EfB12D0Dda656b",
-    provider: "https://vault.bubbleprotocol.com/v2/polygon",
-    file: "0x0000000000000000000000000000000000000000000000000000000000000001"
+    contract: ballotContract,
+    provider: "https://vault.bubbleprotocol.com/v2/polygon"
 }
 
-const bubbleManager = new BubbleRPCManager(privateKey);
+const root = {
+    ...bubbleId,
+    file: "0x0000000000000000000000000000000000000000000000000000000000000000"
+}
+
+const files = await bubbleManager.list(root, 'text', {});
+console.log(files);
+
+const contentId = {
+    ...bubbleId,
+    file: "0x0000000000000000000000000000000000000000000000000000000000000001"
+}
 
 const result = await bubbleManager.read(contentId, 'text');
 

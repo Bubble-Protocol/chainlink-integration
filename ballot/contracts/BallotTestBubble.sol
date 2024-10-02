@@ -3,10 +3,9 @@ pragma solidity ^0.8.0;
 
 import "https://github.com/Bubble-Protocol/bubble-sdk/blob/main/contracts/AccessControlledStorage.sol";
 import "https://github.com/Bubble-Protocol/bubble-sdk/blob/main/contracts/AccessControlBits.sol";
-import {ChainlinkConsumer} from "./ChainlinkConsumer.sol";
 import {IRegistry} from "./IRegistry.sol";
 
-contract Ballot is AccessControlledStorage, ChainlinkConsumer {
+contract BallotTestBubble is AccessControlledStorage {
 
     address public admin;
     address public voteCounter;
@@ -26,10 +25,8 @@ contract Ballot is AccessControlledStorage, ChainlinkConsumer {
         address _registryAddress,   // address of the voter registry contract
         address _voteCounter,       // address of the vote counter
         uint256 _endTime,           // the ballot period end
-        uint256 _deletionTime,      // the time that the off-chain bubble can be deleted
-        uint64 _chainlinkSubId      // Chainlink Functions subscription id
+        uint256 _deletionTime       // the time that the off-chain bubble can be deleted
     )
-    ChainlinkConsumer(_chainlinkSubId)
     {
         admin = msg.sender;
         voterRegistry = IRegistry(_registryAddress);
@@ -49,25 +46,7 @@ contract Ballot is AccessControlledStorage, ChainlinkConsumer {
     function finalizeBallot() external {
         require(block.timestamp >= ballotEndTime, "Ballot period not ended.");
         require(!ballotFinalized, "Ballot has already been finalized.");
-
         ballotFinalized = true;
-
-        // Create request to Chainlink Functions to count votes
-        string[] memory args;
-        args[0] = string(abi.encodePacked(address(this)));
-        callChainlinkFunctions(CHAINLINK_FUNCTIONS_SOURCE_CODE, args);
-        
-    }
-
-    /**
-     * @dev Called by the chainlink router (the automated vote counter) to report the ballot results.
-     *
-     * The FunctionsClient enforces the caller of this function is the Chainlink router contract.
-     */
-    function _handleChainlinkResponse(bytes memory response) internal override {
-        // Assuming response is encoded in the form of (uint256[], bytes32)
-        (uint256[] memory results, bytes32 merkleRoot) = abi.decode(response, (uint256[], bytes32));
-        reportResults(results, merkleRoot);
     }
 
     /**
@@ -75,8 +54,9 @@ contract Ballot is AccessControlledStorage, ChainlinkConsumer {
      *
      * The results are emitted as an event. Once reported the results cannot be changed.
      */
-    function reportResults(uint256[] memory results, bytes32 merkleRoot) private {
+    function reportResults(uint256[] memory results, bytes32 merkleRoot) external {
         require(ballotFinalized, "Ballot not finalized.");
+        require(msg.sender == voteCounter, "Only the vote counter can report results.");
         emit VotesCounted(results, merkleRoot);
         resultsReported = true;
     }
@@ -132,7 +112,3 @@ contract Ballot is AccessControlledStorage, ChainlinkConsumer {
 
 // Bubble structure
 uint256 constant RESULTS_FILE = 1;
-
-// Chainlink Functions sourcecode
-string constant CHAINLINK_FUNCTIONS_SOURCE_CODE = "";
-

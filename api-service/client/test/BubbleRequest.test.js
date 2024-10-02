@@ -134,30 +134,35 @@ describe('BubbleRequest', () => {
 
     test('a plain object', () => {
       const request = new BubbleRequest(LOCAL_CONTENT_ID);
+      expect(request.url).toBe(LOCAL_CONTENT_ID.provider);
       checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
     })
     
     test('a ContentId object', () => {
       const contentId = new ContentId(LOCAL_CONTENT_ID);
       const request = new BubbleRequest(contentId);
+      expect(request.url).toBe(LOCAL_CONTENT_ID.provider);
       checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
     })
 
     test('a base64 encoded content id', () => {
       const contentId = new ContentId(LOCAL_CONTENT_ID);
       const request = new BubbleRequest(contentId.toBase64());
+      expect(request.url).toBe(LOCAL_CONTENT_ID.provider);
       checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
     })
 
     test('a Bubble DID', () => {
       const contentId = new ContentId(LOCAL_CONTENT_ID);
       const request = new BubbleRequest(contentId.toDID());
+      expect(request.url).toBe(LOCAL_CONTENT_ID.provider);
       checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
     })
 
     test('a url with chain, contract and file', () => {
       const contentId = new ContentId(LOCAL_CONTENT_ID);
       const request = new BubbleRequest(contentId.toURL());
+      expect(request.url).toBe(LOCAL_CONTENT_ID.provider);
       checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
     })
 

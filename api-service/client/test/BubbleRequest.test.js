@@ -3,6 +3,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 import { BubbleRequest } from "../src/BubbleRequest.js";
+import { ContentId } from "../src/ContentId.js";
 
 const privateKey = "24802edc1eba0f578dcffd6ada3c5b954a8e76e55ba830cf19a3083d489a6063";
 
@@ -43,7 +44,7 @@ describe('BubbleRequest', () => {
     })
 
     test('when passed an invalid ContentId', () => {
-      expect(() => {new BubbleRequest("https://webapi.com")}).toThrow("Invalid content id");
+      expect(() => {new BubbleRequest("https://webapi.com")}).toThrow("URL must contain chain, contract and file");
     })
 
     test('when passed an invalid options parameter', () => {
@@ -125,6 +126,39 @@ describe('BubbleRequest', () => {
 
     test('returns the body via getBody()', () => {
       checkBody(request.getBody(), 'read', LOCAL_CONTENT_ID);
+    })
+
+  })
+
+  describe('can construct from', () => {
+
+    test('a plain object', () => {
+      const request = new BubbleRequest(LOCAL_CONTENT_ID);
+      checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
+    })
+    
+    test('a ContentId object', () => {
+      const contentId = new ContentId(LOCAL_CONTENT_ID);
+      const request = new BubbleRequest(contentId);
+      checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
+    })
+
+    test('a base64 encoded content id', () => {
+      const contentId = new ContentId(LOCAL_CONTENT_ID);
+      const request = new BubbleRequest(contentId.toBase64());
+      checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
+    })
+
+    test('a Bubble DID', () => {
+      const contentId = new ContentId(LOCAL_CONTENT_ID);
+      const request = new BubbleRequest(contentId.toDID());
+      checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
+    })
+
+    test('a url with chain, contract and file', () => {
+      const contentId = new ContentId(LOCAL_CONTENT_ID);
+      const request = new BubbleRequest(contentId.toURL());
+      checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
     })
 
   })

@@ -64,6 +64,12 @@ export class ContentId {
    * Decodes a bubble DID or base64 encoded content id.
    */
   static _decodeId(str) {
+    let url;
+    try {
+      url = new URL(str);
+    }
+    catch (e) {}
+    if (url && url.protocol !== 'did:') return ContentId._decodeUrl(url);
     if (str.startsWith('did:bubble:')) str = str.slice(11);
     let b64str = str.replace(/-/g, '+').replace(/_/g, '/');
     while (b64str.length % 4) b64str += '=';
@@ -73,6 +79,19 @@ export class ContentId {
     catch (e) {
       throw new TypeError('Invalid content id');
     }
+  }
+
+  static _decodeUrl(url) {
+    let parts = url.pathname.split('/');
+    if (parts.length < 3) throw new TypeError('URL must contain chain, contract and file');
+    const provider = url.protocol + '//' + url.host + parts.slice(0, -3).join('/');
+    parts = parts.slice(-3);
+    return {
+      chain: parseInt(parts[0]),
+      contract: parts[1],
+      provider: provider,
+      file: parts[2]
+    };
   }
 
   /**
@@ -95,6 +114,10 @@ export class ContentId {
    */
   toDID() {
     return 'did:bubble:' + this.toBase64();
+  }
+
+  toURL() {
+    return this.provider + '/' + this.chain + '/' + this.contract + (this.file ? '/' + this.file : '');
   }
 
   /**

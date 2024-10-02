@@ -59,11 +59,11 @@ describe('ContentId', () => {
   describe('throws on construction', () => {
 
     test('when passed nothing', () => {
-      expect(() => {new ContentId()}).toThrow("Invalid content id");
+      expect(() => {new ContentId()}).toThrow("ContentId is missing");
     })
 
     test('when passed an empty string', () => {
-      expect(() => {new ContentId('')}).toThrow("Invalid content id");
+      expect(() => {new ContentId('')}).toThrow("ContentId is missing");
     })
 
     test('when passed an empty object', () => {
@@ -164,7 +164,7 @@ describe('ContentId', () => {
 
     test('when passed a malformed did', () => {
       expect(() => {new ContentId('dod:bubble:'+VALID_BASE64URL_ENCODED_ID)})
-        .toThrow("Invalid content id");
+        .toThrow("URL must contain chain, contract and file");
     })
 
   });
@@ -315,6 +315,29 @@ describe('ContentId', () => {
         file: VALID_FILE
       });
       expect(JSON.stringify(cid.toObject())).toBe('{"chain":1,"contract":"0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929","provider":"https://bubblevault.com:8131/eth/v2","file":"0x24802edc1eba0f578dcffd6ada3c5b954a8e76e55ba830cf19a3083d489a6063/hello-world>>???a.txt"}');
+    })
+
+  })
+
+  describe('.toURL() generates the correct url', () => {
+
+    test('with a plain object (without file)', () => {
+      const cid = new ContentId({
+        chain: VALID_CHAIN,
+        contract: VALID_ADDRESS,
+        provider: VALID_URL
+      });
+      expect(cid.toURL()).toBe('https://bubblevault.com:8131/eth/v2/1/0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929');
+    })
+
+    test('with a plain object (with file)', () => {
+      const cid = new ContentId({
+        chain: VALID_CHAIN,
+        contract: VALID_ADDRESS,
+        provider: VALID_URL,
+        file: VALID_FILE
+      });
+      expect(cid.toURL()).toBe('https://bubblevault.com:8131/eth/v2/1/0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929/0x24802edc1eba0f578dcffd6ada3c5b954a8e76e55ba830cf19a3083d489a6063/hello-world>>???a.txt');
     })
 
   })

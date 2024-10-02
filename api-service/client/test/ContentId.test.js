@@ -59,24 +59,24 @@ describe('ContentId', () => {
   describe('throws on construction', () => {
 
     test('when passed nothing', () => {
-      expect(() => {new ContentId()}).toThrow("ContentId is missing");
+      expect(() => {new ContentId()}).toThrow("Failed to construct ContentId from nothing");
     })
 
     test('when passed an empty string', () => {
-      expect(() => {new ContentId('')}).toThrow("ContentId is missing");
+      expect(() => {new ContentId('')}).toThrow("Failed to construct ContentId from nothing");
     })
 
     test('when passed an empty object', () => {
-      expect(() => {new ContentId({})}).toThrow("Invalid content id");
+      expect(() => {new ContentId({})}).toThrow("Failed to parse ContentId from {chain: NaN, contract: undefined, provider: undefined}");
     })
 
     test('when passed an invalid base64url string', () => {
-      expect(() => {new ContentId('eyJjaG*FpbiI6M')}).toThrow("Invalid content id");
+      expect(() => {new ContentId('eyJjaG*FpbiI6M')}).toThrow("Failed to parse ContentId from base64: eyJjaG*FpbiI6M");
     })
 
     test('when passed invalid JSON encoded as base64url string', () => {
       expect(() => {new ContentId('eyJjaGFpbiI6M')})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from base64: eyJjaGFpbiI6M");
     })
 
     test('when passed an object missing the chain field', () => {
@@ -85,7 +85,7 @@ describe('ContentId', () => {
         provider: VALID_URL
       };
       expect(() => {new ContentId(cid)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from {chain: NaN, contract: 0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929, provider: https://bubblevault.com:8131/eth/v2}");
     })
 
     test('when passed an object with an invalid chain field', () => {
@@ -95,7 +95,7 @@ describe('ContentId', () => {
         provider: VALID_URL
       };
       expect(() => {new ContentId(cid)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from {chain: NaN, contract: 0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929, provider: https://bubblevault.com:8131/eth/v2}");
     })
 
     test('when passed an object missing the contract field', () => {
@@ -104,7 +104,7 @@ describe('ContentId', () => {
         provider: VALID_URL
       };
       expect(() => {new ContentId(cid)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from {chain: 1, contract: undefined, provider: https://bubblevault.com:8131/eth/v2}");
     })
 
     test('when passed an object with an invalid contract field', () => {
@@ -114,7 +114,7 @@ describe('ContentId', () => {
         provider: VALID_URL
       };
       expect(() => {new ContentId(cid)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from {chain: 1, contract: 010203xyz, provider: https://bubblevault.com:8131/eth/v2}");
     })
 
     test('when passed an object missing the provider field', () => {
@@ -123,7 +123,7 @@ describe('ContentId', () => {
         contract: VALID_ADDRESS
       };
       expect(() => {new ContentId(cid)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from {chain: 1, contract: 0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929, provider: undefined}");
     })
 
     test('when passed an object with an invalid provider field', () => {
@@ -133,7 +133,7 @@ describe('ContentId', () => {
         provider: 1
       };
       expect(() => {new ContentId(cid)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from {chain: 1, contract: 0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929, provider: 1}");
     })
 
     test('when passed an object with an invalid file field', () => {
@@ -144,27 +144,27 @@ describe('ContentId', () => {
         file: 'myFile'
       };
       expect(() => {new ContentId(cid)})
-        .toThrow("Invalid file parameter within content id");
+        .toThrow("Failed to parse ContentId file from myFile");
     })
 
     test('when passed a base64url encoded id missing the chain field', () => {
       expect(() => {new ContentId(INVALID_BASE64_ENCODED_ID_MISSING_CHAIN)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from {chain: NaN, contract: 0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929, provider: https://bubblevault.com:8131/eth/v2}");
     })
 
     test('when passed a base64url encoded id with an invalid chain field', () => {
       expect(() => {new ContentId(INVALID_BASE64_ENCODED_ID_INVALID_CHAIN)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from {chain: NaN, contract: 0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929, provider: https://bubblevault.com:8131/eth/v2}");
     })
 
     test('when passed a did with the wrong method', () => {
       expect(() => {new ContentId('did:notbub:'+VALID_BASE64URL_ENCODED_ID)})
-        .toThrow("Invalid content id");
+        .toThrow("Failed to parse ContentId from base64: did:notbub:"+VALID_BASE64URL_ENCODED_ID);
     })
 
     test('when passed a malformed did', () => {
       expect(() => {new ContentId('dod:bubble:'+VALID_BASE64URL_ENCODED_ID)})
-        .toThrow("URL must contain chain, contract and file");
+        .toThrow("Failed to construct ContentId from dod:bubble:"+VALID_BASE64URL_ENCODED_ID+" (must contain chain, contract and file)");
     })
 
   });
@@ -390,56 +390,54 @@ describe('Filename tests: ContentId', () => {
   
   describe('construction fails', () => {
 
-    function testInvalidPath(path) {
-      expect(() => new ContentId(VALID_ID, {file: path})).toThrow('Invalid file parameter within content id');
-    }
-    
     test('with undefined parameter', () => {
-      testInvalidPath({...VALID_ID, file: undefined});
+      expect(() => new ContentId({...VALID_ID, chain: undefined}))
+      .toThrow("Failed to parse ContentId from {chain: NaN, contract: 0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929, provider: https://bubblevault.com:8131/eth/v2}");
     })
 
     test('with empty parameter', () => {
-      testInvalidPath({...VALID_ID, file: ''});
+      expect(() => new ContentId({...VALID_ID, contract: ''}))
+      .toThrow("Failed to parse ContentId from {chain: 1, contract: , provider: https://bubblevault.com:8131/eth/v2}");
     })
 
     test('with incorrect type of parameter', () => {
-      testInvalidPath({...VALID_ID, file: {}});
+      expect(() => new ContentId({...VALID_ID, file: {}}))
+      .toThrow("Failed to parse ContentId file from [object Object]");
     })
 
-    test('with a path extension that is too long', () => {
-      testInvalidPath({...VALID_ID, file: VALID_MAX_LENGTH_FILE+'p'});
-    })
-
-    test('with a directory part that is too short', () => {
-      testInvalidPath({...VALID_ID, file: VALID_DIR_NO_PREFIX.slice(1)});
+    test('with a path extension that is more than 255 character', () => {
+      expect(() => new ContentId({...VALID_ID, file: VALID_MAX_LENGTH_FILE+'p'}))
+      .toThrow("Failed to parse ContentId file from "+VALID_MAX_LENGTH_FILE+"p");
     })
 
     test('with a directory part that is too long', () => {
-      testInvalidPath({...VALID_ID, file: '1'+VALID_DIR_NO_PREFIX});
+      expect(() => new ContentId({...VALID_ID, file: '1'+VALID_DIR_NO_PREFIX}))
+      .toThrow("Failed to parse ContentId file from 124802edc1eba0f578dcffd6ada3c5b954a8e76e55ba830cf19a3083d489a6063 (file name too long)");
     })
 
     test('with a null character in its extension', () => {
-      testInvalidPath({...VALID_ID, file: VALID_DIR+'/invalid\0extension'});
+      expect(() => new ContentId({...VALID_ID, file: VALID_DIR+'/invalid\0extension'}))
+      .toThrow("Failed to parse ContentId file from 0x24802edc1eba0f578dcffd6ada3c5b954a8e76e55ba830cf19a3083d489a6063/invalid\0extension (invalid POSIX file name)");
     })
 
     test('with a missing /', () => {
-      testInvalidPath({...VALID_ID, file: VALID_DIR+'hello-world.txt'});
+      expect(() => new ContentId({...VALID_ID, file: VALID_DIR+'hello-world.txt'}))
+      .toThrow("Failed to parse ContentId file from 0x24802edc1eba0f578dcffd6ada3c5b954a8e76e55ba830cf19a3083d489a6063hello-world.txt (file name too long)");
     })
 
     test('with more than one /', () => {
-      testInvalidPath({...VALID_ID, file: VALID_DIR+'/myDir/hello-world.txt'});
-    })
-
-    test('with an extension > 255 characters', () => {
-      testInvalidPath({...VALID_ID, file: VALID_DIR+'/myDir/hello-world.txt'});
+      expect(() => new ContentId({...VALID_ID, file: VALID_DIR+'/myDir/hello-world.txt'}))
+      .toThrow("Failed to parse ContentId file from 0x24802edc1eba0f578dcffd6ada3c5b954a8e76e55ba830cf19a3083d489a6063/myDir/hello-world.txt");
     })
 
     test('with the reserved . path', () => {
-      testInvalidPath({...VALID_ID, file: VALID_DIR+'/.'});
+      expect(() => new ContentId({...VALID_ID, file: VALID_DIR+'/.'}))
+      .toThrow("Failed to parse ContentId file from "+VALID_DIR+"/. (invalid POSIX file name)");
     })
 
     test('with the reserved .. path', () => {
-      testInvalidPath({...VALID_ID, file: VALID_DIR+'/..'});
+      expect(() => new ContentId({...VALID_ID, file: VALID_DIR+'/..'}))
+      .toThrow("Failed to parse ContentId file from "+VALID_DIR+"/.. (invalid POSIX file name)");
     })
 
   })

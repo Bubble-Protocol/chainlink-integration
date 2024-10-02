@@ -36,19 +36,19 @@ describe('BubbleRequest', () => {
   describe('throws on construction', () => {
 
     test('when passed nothing', () => {
-      expect(() => {new BubbleRequest()}).toThrow("ContentId is missing");
+      expect(() => {new BubbleRequest()}).toThrow("Failed to construct ContentId from nothing");
     })
 
     test('when passed an empty object', () => {
-      expect(() => {new BubbleRequest({})}).toThrow("Invalid content id");
+      expect(() => {new BubbleRequest({})}).toThrow("Failed to parse ContentId from {chain: NaN, contract: undefined, provider: undefined}");
     })
 
     test('when passed an invalid ContentId', () => {
-      expect(() => {new BubbleRequest("https://webapi.com")}).toThrow("URL must contain chain, contract and file");
+      expect(() => {new BubbleRequest("https://webapi.com")}).toThrow("Failed to construct ContentId from https://webapi.com/ (must contain chain, contract and file)");
     })
 
     test('when passed an invalid options parameter', () => {
-      expect(() => {new BubbleRequest(LOCAL_CONTENT_ID, "hello")}).toThrow("Invalid options parameter");
+      expect(() => {new BubbleRequest(LOCAL_CONTENT_ID, "hello")}).toThrow("Failed to construct BubbleRequest - invalid options parameter");
     })
 
   })

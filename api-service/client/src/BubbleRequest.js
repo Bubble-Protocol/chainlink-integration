@@ -28,7 +28,7 @@ export class BubbleRequest extends Request {
    */
   constructor(contentId, options) {
     const validatedContentId = new ContentId(contentId);
-    if (options && typeof options !== 'object') throw new TypeError('Invalid options parameter');
+    if (options && typeof options !== 'object') throw new TypeError('Failed to construct BubbleRequest - invalid options parameter');
     const bOptions = {...options};
     bOptions.method = 'POST'; // all bubble requests are POST
     bOptions.body = BubbleRequest._constructBubbleRequestBody(validatedContentId, options);

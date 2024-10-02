@@ -20,12 +20,13 @@ export class ContentId {
    * @param {*} options to override one or more properties if id is a ContentId object.
    */
   constructor(id, options={}) {
-    if (!id) throw new TypeError('ContentId is missing');
+    if (!id) throw new TypeError('Failed to construct ContentId from nothing');
     if (typeof id === 'string') id = ContentId._decodeId(id);
-    const chain = options.chainId || options.chain || id.chainId || id.chain;
+    let chain = options.chainId || options.chain || id.chainId || id.chain;
     let contract = options.contract || id.contract;
     const file = options.file || id.file;
     const provider = options.provider || id.provider;
+    if (typeof chain !== 'number') chain = 'NaN';
     if (
       !chain || 
       !contract || 
@@ -36,7 +37,7 @@ export class ContentId {
       (contract.slice(0, 2) === '0x' && (contract = contract.slice(2)), contract.length !== 40) || 
       !isHex(contract)
     ) {
-      throw new TypeError('Invalid content id');
+      throw new TypeError('Failed to parse ContentId from {chain: '+chain+', contract: '+contract+', provider: '+provider+'}');
     }
     this.chain = chain;
     this.contract = '0x'+contract;
@@ -49,14 +50,19 @@ export class ContentId {
    */
   static _expandFileId(file) {
     if (typeof file === 'number') file = ""+file;
-    if (typeof file !== 'string') throw new TypeError('Invalid file parameter within content id');
+    if (typeof file !== 'string') throw new TypeError('Failed to parse ContentId file from '+file);
     let parts = file.split('/');
-    if (parts.length > 2) throw new TypeError('Invalid file parameter within content id');
+    if (parts.length > 2) throw new TypeError('Failed to parse ContentId file from '+file+' (too many nested parts)');
     let p = parts[0];
     p = p.slice(0,2) === '0x' ? p.slice(2) : p;
+    if (p.length > 64) throw new TypeError('Failed to parse ContentId file from '+file+' (file name too long)');
     p = p.length === 64 ? p : '0'.repeat(64-p.length)+p;
-    if (!isHex(p)) throw new TypeError('Invalid file parameter within content id');
+    if (!isHex(p)) throw new TypeError('Failed to parse ContentId file from '+file+' (invalid hex characters)');
     parts[0] = '0x'+p.toLowerCase();
+    if (parts.length === 2) {
+      if (parts[1].length > 255) throw new TypeError('Failed to parse ContentId file from '+file+' (file name too long)');
+      if (!isPOSIXFilename(parts[1])) throw new TypeError('Failed to parse ContentId file from '+file+' (invalid POSIX file name)');
+    }
     return parts.join('/');
   }
 
@@ -77,13 +83,13 @@ export class ContentId {
       return JSON.parse(Buffer.from(b64str, 'base64').toString('utf8'));
     }
     catch (e) {
-      throw new TypeError('Invalid content id');
+      throw new TypeError('Failed to parse ContentId from base64: '+str);
     }
   }
 
   static _decodeUrl(url) {
     let parts = url.pathname.split('/');
-    if (parts.length < 3) throw new TypeError('URL must contain chain, contract and file');
+    if (parts.length < 3) throw new TypeError('Failed to construct ContentId from '+url.href+' (must contain chain, contract and file)');
     const provider = url.protocol + '//' + url.host + parts.slice(0, -3).join('/');
     parts = parts.slice(-3);
     return {
@@ -135,4 +141,14 @@ export class ContentId {
  */
 function isHex(str) {
   return /^[0-9a-fA-F]+$/.test(str);
+}
+
+/**
+ * True if the string is a valid POSIX filename with max length of 255.
+ */
+function isPOSIXFilename(value) {
+  return (
+    /^[^\0\/]{1,255}$/.test(value) &&          
+    value !== "." &&                             // must not be a special file
+    value !== "..");
 }

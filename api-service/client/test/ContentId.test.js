@@ -164,7 +164,7 @@ describe('ContentId', () => {
 
     test('when passed a malformed did', () => {
       expect(() => {new ContentId('dod:bubble:'+VALID_BASE64URL_ENCODED_ID)})
-        .toThrow("Failed to construct ContentId from dod:bubble:"+VALID_BASE64URL_ENCODED_ID+" (must contain chain, contract and file)");
+        .toThrow("Failed to construct ContentId from dod:bubble:"+VALID_BASE64URL_ENCODED_ID+" (must contain chain, contract and (optionally) file)");
     })
 
   });
@@ -243,6 +243,38 @@ describe('ContentId', () => {
       expect(cid.contract).toBe(VALID_ADDRESS);
       expect(cid.provider).toBe(VALID_URL);
       expect(cid.file).toBe(VALID_FILE);
+    })
+
+    test('with a url (without file)', () => {
+      const cid = new ContentId(VALID_URL+'/'+VALID_CHAIN+'/'+VALID_ADDRESS);
+      expect(cid.chain).toBe(VALID_CHAIN);
+      expect(cid.contract).toBe(VALID_ADDRESS);
+      expect(cid.provider).toBe(VALID_URL);
+      expect(cid.file).toBe(undefined);
+    })
+
+    test('with a url (with file)', () => {
+      const cid = new ContentId(VALID_URL+'/'+VALID_CHAIN+'/'+VALID_ADDRESS+'/'+encodeURIComponent(VALID_FILE));
+      expect(cid.chain).toBe(VALID_CHAIN);
+      expect(cid.contract).toBe(VALID_ADDRESS);
+      expect(cid.provider).toBe(VALID_URL);
+      expect(cid.file).toBe(VALID_FILE);
+    })
+
+    test('with a minimal url (without file)', () => {
+      const cid = new ContentId("https://bubblevault.com:8131/1/0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929");
+      expect(cid.chain).toBe(VALID_CHAIN);
+      expect(cid.contract).toBe(VALID_ADDRESS);
+      expect(cid.provider).toBe("https://bubblevault.com:8131");
+      expect(cid.file).toBe(undefined);
+    })
+
+    test('with a minimal url (with file)', () => {
+      const cid = new ContentId("https://bubblevault.com:8131/1/0xc16a409a39EDe3F38E212900f8d3afe6aa6A8929/1");
+      expect(cid.chain).toBe(VALID_CHAIN);
+      expect(cid.contract).toBe(VALID_ADDRESS);
+      expect(cid.provider).toBe("https://bubblevault.com:8131");
+      expect(cid.file).toBe('0x0000000000000000000000000000000000000000000000000000000000000001');
     })
 
   })

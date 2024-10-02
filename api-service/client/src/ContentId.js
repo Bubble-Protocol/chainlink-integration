@@ -89,15 +89,20 @@ export class ContentId {
 
   static _decodeUrl(url) {
     let parts = url.pathname.split('/');
-    if (parts.length < 3) throw new TypeError('Failed to construct ContentId from '+url.href+' (must contain chain, contract and file)');
-    const provider = url.protocol + '//' + url.host + parts.slice(0, -3).join('/');
-    parts = parts.slice(-3);
-    return {
+    const contractIndex = 
+      parts.length > 1 && isAddress(parts[parts.length-1]) ? 0 : 
+      parts.length > 2 && isAddress(parts[parts.length-2]) ? -1 : 
+      parts.length > 3 && isAddress(parts[parts.length-3]) ? -2 : 1;
+    if (contractIndex > 0) throw new TypeError('Failed to construct ContentId from '+url.href+' (must contain chain, contract and (optionally) file)');
+    const provider = url.protocol + '//' + url.host + parts.slice(0, contractIndex-2).join('/');
+    parts = parts.slice(contractIndex-2);
+    const result = {
       chain: parseInt(parts[0]),
       contract: parts[1],
-      provider: provider,
-      file: parts[2]
-    };
+      provider: provider
+    }
+    if (contractIndex < 0) result.file = decodeURIComponent(parts.slice(contractIndex).join('/'));
+    return result;
   }
 
   /**
@@ -122,6 +127,9 @@ export class ContentId {
     return 'did:bubble:' + this.toBase64();
   }
 
+  /**
+   * Exports the content id as a URL string
+   */
   toURL() {
     return this.provider + '/' + this.chain + '/' + this.contract + (this.file ? '/' + this.file : '');
   }
@@ -151,4 +159,11 @@ function isPOSIXFilename(value) {
     /^[^\0\/]{1,255}$/.test(value) &&          
     value !== "." &&                             // must not be a special file
     value !== "..");
+}
+
+/**
+ * True if the string has the form of an ethereum address.
+ */
+function isAddress(str) {
+  return str.length === 42 && str.startsWith('0x') && isHex(str.slice(2));
 }

@@ -44,7 +44,7 @@ describe('BubbleRequest', () => {
     })
 
     test('when passed an invalid ContentId', () => {
-      expect(() => {new BubbleRequest("https://webapi.com")}).toThrow("Failed to construct ContentId from https://webapi.com/ (must contain chain, contract and file)");
+      expect(() => {new BubbleRequest("https://webapi.com")}).toThrow("Failed to construct ContentId from https://webapi.com/ (must contain chain, contract and (optionally) file)");
     })
 
     test('when passed an invalid options parameter', () => {
@@ -164,6 +164,14 @@ describe('BubbleRequest', () => {
       const request = new BubbleRequest(contentId.toURL());
       expect(request.url).toBe(LOCAL_CONTENT_ID.provider);
       checkContentId(request.getContentId(), LOCAL_CONTENT_ID);
+    })
+
+    test('a url with chain and contract only', () => {
+      const contentId = new ContentId(LOCAL_CONTENT_ID);
+      contentId.file = null;
+      const request = new BubbleRequest(contentId.toURL());
+      expect(request.url).toBe(LOCAL_CONTENT_ID.provider);
+      checkContentId(request.getContentId(), {...LOCAL_CONTENT_ID, file: null});
     })
 
   })

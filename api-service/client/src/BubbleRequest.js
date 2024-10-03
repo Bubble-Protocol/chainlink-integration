@@ -31,7 +31,7 @@ export class BubbleRequest extends Request {
     if (options && typeof options !== 'object') throw new TypeError('Failed to construct BubbleRequest - invalid options parameter');
     const bOptions = {...options};
     bOptions.method = 'POST'; // all bubble requests are POST
-    bOptions.body = BubbleRequest._constructBubbleRequestBody(validatedContentId, options);
+    bOptions.body = BubbleRequest._constructBubbleRequestBody(validatedContentId, bOptions.body);
     super(bOptions.url || validatedContentId.provider, bOptions);
     this.headers.set('Content-Type', 'application/json');
     this.contentId = validatedContentId;
@@ -42,13 +42,12 @@ export class BubbleRequest extends Request {
    * Constructs a Bubble Protocol request body from the provided options.
    */
   static _constructBubbleRequestBody(contentId, options={}) {
-    const body = options.body || {};
-    const params = body.params || {};
+    const params = options.params || {};
     const nonce = params.nonce || crypto.randomUUID();
     const request = {
-      jsonrpc: body.jsonrpc || "2.0",
-      id: body.id || nonce,
-      method: body.method || 'read',
+      jsonrpc: options.jsonrpc || "2.0",
+      id: options.id || nonce,
+      method: options.method || 'read',
       params: {
           timestamp: params.timestamp || Date.now(),
           nonce: nonce,
@@ -73,13 +72,13 @@ export class BubbleRequest extends Request {
    *   - jsonrpcId: id to insert in the body's `id` field (uses the nonce in the params by default)
    * @returns Request A new Request object signed with the provided private key
    */
-  async sign(privateKeyOrSignFunction, options={}) {
-    const bodyJson = await this.text();
-    const body = JSON.parse(bodyJson);
-    const jsonrpc = { jsonrpc: body.jsonrpc, id: body.id };
-    delete body.jsonrpc; // protocol requires just method and params to be signed
-    delete body.id;
-    const hash = keccak_256(JSON.stringify(body));
+  async sign(privateKeyOrSignFunction) {
+    const body = await this.json();
+    const packet = {
+      method: body.method,
+      params: body.params,
+    }
+    const hash = keccak_256(JSON.stringify(packet));
     let sig;
     if (typeof privateKeyOrSignFunction === 'function') {
       sig = await privateKeyOrSignFunction(hash);
@@ -89,13 +88,7 @@ export class BubbleRequest extends Request {
       sig = sig.toCompactHex() + secp.etc.bytesToHex([27+sig.recovery])
     }
     body.params.signature = sig;
-    const signedBody = {
-      jsonrpc: jsonrpc.jsonrpc,
-      id: jsonrpc.id,
-      method: body.method,
-      params: body.params,
-    }
-    return new Request(this, {body: JSON.stringify(signedBody)});
+    return new Request(this, {body: JSON.stringify(body)});
   }
 
   /**

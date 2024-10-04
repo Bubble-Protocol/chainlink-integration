@@ -28,6 +28,7 @@ yarn-error.log*
 artifacts
 .deps
 .states
+.deploys
 remixd.sh
 
 # others

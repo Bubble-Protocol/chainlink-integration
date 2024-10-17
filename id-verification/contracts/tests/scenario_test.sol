@@ -161,12 +161,12 @@ contract SharedVault_Logic_Test {
         Assert.ok(vault.isClosed(), "vault should be closed");
         Assert.ok(!registry.isRegistered(creator), "user should not be registered");
         Assert.ok(!registry.isVerified(creator), "user should not be verified");
-        Assert.equal(vault.getAccessPermissions(creator, IDENTITY_FILE), BUBBLE_TERMINATED_BIT, "creator should have r access to identity file");
-        Assert.equal(vault.getAccessPermissions(creator, RESULTS_FILE), BUBBLE_TERMINATED_BIT, "creator should have r access to results file");
-        Assert.equal(vault.getAccessPermissions(verifier, IDENTITY_FILE), BUBBLE_TERMINATED_BIT, "verifier should have no access to identity file");
-        Assert.equal(vault.getAccessPermissions(verifier, RESULTS_FILE), BUBBLE_TERMINATED_BIT, "verifier should have no access to results file");
-        Assert.equal(vault.getAccessPermissions(randomUser, IDENTITY_FILE), BUBBLE_TERMINATED_BIT, "unrelated user should have no access to identity file");
-        Assert.equal(vault.getAccessPermissions(randomUser, RESULTS_FILE), BUBBLE_TERMINATED_BIT, "unrelated user should have no access to results file");
+        Assert.equal(vault.getAccessPermissions(creator, IDENTITY_FILE), BUBBLE_TERMINATED_BIT, "bubble should be terminated");
+        Assert.equal(vault.getAccessPermissions(creator, RESULTS_FILE), BUBBLE_TERMINATED_BIT, "bubble should be terminated");
+        Assert.equal(vault.getAccessPermissions(verifier, IDENTITY_FILE), BUBBLE_TERMINATED_BIT, "bubble should be terminated");
+        Assert.equal(vault.getAccessPermissions(verifier, RESULTS_FILE), BUBBLE_TERMINATED_BIT, "bubble should be terminated");
+        Assert.equal(vault.getAccessPermissions(randomUser, IDENTITY_FILE), BUBBLE_TERMINATED_BIT, "bubble should be terminated");
+        Assert.equal(vault.getAccessPermissions(randomUser, RESULTS_FILE), BUBBLE_TERMINATED_BIT, "bubble should be terminated");
     }
 
 }

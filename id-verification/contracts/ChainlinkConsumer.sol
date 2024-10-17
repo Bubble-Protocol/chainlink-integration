@@ -68,9 +68,12 @@ abstract contract ChainlinkConsumer is FunctionsClient {
     function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
         emit ChainlinkResponse(requestId, response, err);
         if (err.length == 0) _handleChainlinkResponse(requestId, response);
+        else _handleChainlinkError(requestId, err);
     }
     
     function _handleChainlinkResponse(bytes32 requestId, bytes memory response) internal virtual;
+
+    function _handleChainlinkError(bytes32 requestId, bytes memory response) internal virtual;
 
 }
 

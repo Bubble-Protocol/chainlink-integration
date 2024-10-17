@@ -97,10 +97,29 @@ contract SharedVault_Logic_Test {
         }
     }
 
-    function requestReverification() public {
+    function requestReVerification1() public {
         chainlinkRouter.setMockRequestId(0);
         vault.verifyIdentity();
         Assert.equal(chainlinkRouter.sendRequestCount(), 2, "mock sendRequestCount incorrect");
+        Assert.ok(uint(vault.state()) == 1, "vault should be in the verifying state");
+        Assert.ok(vault.isLockedForVeryifying(), "vault id should be locked");
+        Assert.ok(!registry.isVerified(creator), "user should not be verified");
+    }
+
+    function publishVerificationError() public {
+        bytes memory response = new bytes(0);
+        bytes memory error = abi.encode("Simulated Error!"); 
+        chainlinkRouter.fulfillRequest(0, response, error);
+        Assert.ok(registry.isRegistered(creator), "user should be registered");
+        Assert.ok(!registry.isVerified(creator), "user should not be verified");
+        Assert.ok(uint(vault.state()) == 0, "vault should be back in the draft state");
+        Assert.ok(!vault.isLockedForVeryifying(), "vault should not be locked");
+    }
+
+    function requestReverification2() public {
+        chainlinkRouter.setMockRequestId(0);
+        vault.verifyIdentity();
+        Assert.equal(chainlinkRouter.sendRequestCount(), 3, "mock sendRequestCount incorrect");
         Assert.ok(uint(vault.state()) == 1, "vault should be in the verifying state");
         Assert.ok(vault.isLockedForVeryifying(), "vault id should be locked");
         Assert.ok(!registry.isVerified(creator), "user should not be verified");

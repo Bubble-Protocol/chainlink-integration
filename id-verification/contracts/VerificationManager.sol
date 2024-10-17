@@ -62,21 +62,9 @@ contract VerificationManager is IVerificationManager, ChainlinkConsumer {
         emit VerificationCompleted(user, isVerified);
     }
     
-    // Test point for simulating chainlink response when in test mode
-    function testHandleChainlinkResponse(bytes32 requestId, bytes memory response) external {
-        require(testMode, "not in test mode");
-        _handleChainlinkResponse(requestId, response);
-    }
-
     function _handleChainlinkError(bytes32 requestId, bytes memory err) internal override {
         address user = _setVerificationResult(requestId, false);
         emit VerificationError(user, err);
-    }
-
-    // Test point for simulating chainlink error when in test mode
-    function testHandleChainlinkError(bytes32 requestId, bytes memory err) external {
-        require(testMode, "not in test mode");
-        _handleChainlinkError(requestId, err);
     }
 
     function _setVerificationResult(bytes32 requestId, bool isVerified) private returns (address) {

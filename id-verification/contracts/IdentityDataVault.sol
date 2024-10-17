@@ -143,6 +143,7 @@ contract IdentityDataVault is AccessControlledStorage, ProviderMetadata {
         require(msg.sender == owner, "Caller is not the owner");
         require(state != State.VERIFIED, "Cannot close when in the VERIFIED state");
         require(state != State.TERMINATED || isClosed(), "Retention period is still active");
+        if (verificationRegistry.isRegistered(owner)) verificationRegistry.deregisterUser();
         state = State.CLOSED;
     }
 
